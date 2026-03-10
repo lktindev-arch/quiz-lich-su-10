@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Lịch Sử 10 – Giữa HKII</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --gold: #e6ac2c;
+    --gold2: #f5c842;
+    --red: #f85149;
+    --green: #3fb950;
+    --blue: #58a6ff;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Be Vietnam Pro', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* STARS BG */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(230,172,44,0.25) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 10%, rgba(88,166,255,0.15) 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 70%, rgba(230,172,44,0.1) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 90%, rgba(88,166,255,0.1) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* SCREEN SYSTEM */
+  .screen { display: none; width: 100%; max-width: 820px; padding: 24px 16px 60px; position: relative; z-index: 1; }
+  .screen.active { display: block; }
+
+  /* ── START SCREEN ── */
+  #start-screen { text-align: center; padding-top: 60px; }
+
+  .logo-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(230,172,44,0.12); border: 1px solid rgba(230,172,44,0.3);
+    border-radius: 999px; padding: 6px 16px;
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em;
+    color: var(--gold); text-transform: uppercase; margin-bottom: 28px;
+  }
+
+  h1.main-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 900; line-height: 1.15;
+    background: linear-gradient(135deg, #e6ac2c 0%, #f5c842 50%, #e6ac2c 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; margin-bottom: 12px;
+  }
+
+  .subtitle { color: var(--muted); font-size: 1rem; margin-bottom: 36px; }
+
+  .stats-row {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 24px; text-align: center;
+    min-width: 120px;
+  }
+  .stat-card .num { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--gold); }
+  .stat-card .lbl { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+  .chapter-list {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px; margin-bottom: 40px;
+  }
+
+  .chapter-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px; text-align: left;
+    cursor: pointer; transition: all 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .chapter-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px; background: var(--gold); opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .chapter-card:hover, .chapter-card.selected {
+    border-color: var(--gold); background: rgba(230,172,44,0.07);
+  }
+  .chapter-card:hover::before, .chapter-card.selected::before { opacity: 1; }
+  .chapter-card.selected { box-shadow: 0 0 0 1px var(--gold); }
+
+  .chapter-card .ch-num { font-size: 0.7rem; color: var(--gold); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+  .chapter-card .ch-name { font-size: 0.88rem; font-weight: 600; margin-top: 4px; line-height: 1.3; }
+  .chapter-card .ch-count { font-size: 0.75rem; color: var(--muted); margin-top: 6px; }
+
+  .btn-start {
+    background: linear-gradient(135deg, #e6ac2c, #f5c842);
+    color: #0d1117; border: none; border-radius: var(--radius);
+    padding: 16px 48px; font-size: 1.05rem; font-weight: 700;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.03em;
+  }
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(230,172,44,0.35); }
+  .btn-start:active { transform: translateY(0); }
+
+  /* ── QUIZ SCREEN ── */
+  #quiz-screen { padding-top: 20px; }
+
+  .quiz-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+  }
+
+  .chapter-badge {
+    background: rgba(230,172,44,0.12); border: 1px solid rgba(230,172,44,0.25);
+    border-radius: 999px; padding: 5px 14px;
+    font-size: 0.72rem; font-weight: 700; color: var(--gold);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  .q-counter { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+  .q-counter span { color: var(--text); font-weight: 700; }
+
+  .progress-bar-wrap {
+    width: 100%; height: 6px; background: var(--border);
+    border-radius: 999px; margin-bottom: 28px; overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%; background: linear-gradient(90deg, #e6ac2c, #f5c842);
+    border-radius: 999px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .segment-progress {
+    display: flex; gap: 3px; margin-bottom: 22px; flex-wrap: wrap;
+  }
+  .seg-dot {
+    flex: 1; min-width: 6px; max-width: 16px; height: 6px;
+    border-radius: 999px; background: var(--border);
+    transition: background 0.3s;
+  }
+  .seg-dot.correct { background: var(--green); }
+  .seg-dot.wrong { background: var(--red); }
+  .seg-dot.current { background: var(--gold); }
+
+  .question-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; margin-bottom: 16px;
+    animation: slideIn 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-text {
+    font-size: 1.05rem; font-weight: 600; line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+
+  .option-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 18px;
+    text-align: left; cursor: pointer; transition: all 0.18s;
+    font-size: 0.92rem; font-family: 'Be Vietnam Pro', sans-serif;
+    color: var(--text); font-weight: 500; line-height: 1.5;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--gold); background: rgba(230,172,44,0.08);
+    transform: translateX(3px);
+  }
+  .option-btn .opt-label {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--border); display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+    transition: all 0.18s;
+  }
+  .option-btn:hover:not(:disabled) .opt-label { background: var(--gold); color: #0d1117; }
+
+  .option-btn.selected { border-color: var(--gold); background: rgba(230,172,44,0.08); }
+  .option-btn.selected .opt-label { background: var(--gold); color: #0d1117; }
+
+  .option-btn.correct {
+    border-color: var(--green); background: rgba(63,185,80,0.1);
+    pointer-events: none;
+  }
+  .option-btn.correct .opt-label { background: var(--green); color: #0d1117; }
+
+  .option-btn.wrong {
+    border-color: var(--red); background: rgba(248,81,73,0.1);
+    pointer-events: none;
+  }
+  .option-btn.wrong .opt-label { background: var(--red); color: #fff; }
+
+  .option-btn.disabled-plain { opacity: 0.5; pointer-events: none; }
+
+  .feedback-box {
+    border-radius: var(--radius); padding: 14px 18px;
+    font-size: 0.88rem; font-weight: 600; margin-bottom: 16px;
+    display: none; align-items: center; gap: 10px; line-height: 1.5;
+  }
+  .feedback-box.show { display: flex; }
+  .feedback-box.correct-fb { background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.3); color: #7ee787; }
+  .feedback-box.wrong-fb { background: rgba(248,81,73,0.12); border: 1px solid rgba(248,81,73,0.3); color: #ff7b72; }
+
+  .btn-next {
+    background: linear-gradient(135deg, #e6ac2c, #f5c842);
+    color: #0d1117; border: none; border-radius: var(--radius);
+    padding: 14px 36px; font-size: 0.95rem; font-weight: 700;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    cursor: pointer; transition: all 0.2s;
+    display: none; width: 100%;
+  }
+  .btn-next.show { display: block; }
+  .btn-next:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(230,172,44,0.3); }
+
+  /* ── RESULT SCREEN ── */
+  #result-screen { text-align: center; padding-top: 40px; }
+
+  .result-ring-wrap { display: flex; justify-content: center; margin-bottom: 28px; }
+
+  .result-ring {
+    width: 160px; height: 160px; position: relative;
+  }
+  .result-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 10; }
+  .ring-fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1); }
+  .ring-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .ring-pct { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 900; }
+  .ring-lbl { font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; }
+
+  .result-title {
+    font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 900;
+    margin-bottom: 8px;
+  }
+  .result-sub { color: var(--muted); margin-bottom: 32px; }
+
+  .result-stats {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 36px;
+  }
+  .res-stat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 20px; min-width: 100px;
+  }
+  .res-stat .rs-num { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; }
+  .res-stat .rs-lbl { font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+  .res-stat.green .rs-num { color: var(--green); }
+  .res-stat.red .rs-num { color: var(--red); }
+  .res-stat.gold .rs-num { color: var(--gold); }
+
+  .result-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  .btn-restart, .btn-back {
+    border-radius: var(--radius); padding: 13px 28px;
+    font-size: 0.92rem; font-weight: 700; cursor: pointer;
+    font-family: 'Be Vietnam Pro', sans-serif; transition: all 0.2s;
+    border: none;
+  }
+  .btn-restart {
+    background: linear-gradient(135deg, #e6ac2c, #f5c842); color: #0d1117;
+  }
+  .btn-restart:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(230,172,44,0.3); }
+  .btn-back {
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-back:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* review section */
+  .review-section { margin-top: 40px; text-align: left; }
+  .review-title {
+    font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700;
+    margin-bottom: 16px; color: var(--gold);
+  }
+  .review-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+  }
+  .review-item .ri-q { font-size: 0.88rem; font-weight: 600; margin-bottom: 8px; line-height: 1.5; }
+  .review-item .ri-row { font-size: 0.82rem; margin-top: 4px; line-height: 1.5; }
+  .ri-wrong-ans { color: var(--red); }
+  .ri-right-ans { color: var(--green); }
+</style>
+</head>
+<body>
+
+<!-- ──────── START SCREEN ──────── -->
+<div class="screen active" id="start-screen">
+  <div class="logo-badge">📜 Ôn tập giữa HKII</div>
+  <h1 class="main-title">Quiz Lịch Sử 10</h1>
+  <p class="subtitle">Văn minh cổ đại trên đất Việt Nam & Văn minh Đại Việt</p>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="num">67</div><div class="lbl">Câu hỏi</div></div>
+    <div class="stat-card"><div class="num">4</div><div class="lbl">Bài học</div></div>
+    <div class="stat-card"><div class="num">∞</div><div class="lbl">Thời gian</div></div>
+  </div>
+
+  <div class="chapter-list" id="chapter-list">
+    <div class="chapter-card selected" data-ch="0">
+      <div class="ch-num">Tất cả</div>
+      <div class="ch-name">Toàn bộ đề cương</div>
+      <div class="ch-count">67 câu</div>
+    </div>
+    <div class="chapter-card" data-ch="1">
+      <div class="ch-num">Bài 10</div>
+      <div class="ch-name">Văn minh Văn Lang – Âu Lạc</div>
+      <div class="ch-count">17 câu</div>
+    </div>
+    <div class="chapter-card" data-ch="2">
+      <div class="ch-num">Bài 11</div>
+      <div class="ch-name">Văn minh Chăm-pa, Phù Nam</div>
+      <div class="ch-count">17 câu</div>
+    </div>
+    <div class="chapter-card" data-ch="3">
+      <div class="ch-num">Bài 12</div>
+      <div class="ch-name">Cơ sở & Quá trình phát triển VH Đại Việt</div>
+      <div class="ch-count">16 câu</div>
+    </div>
+    <div class="chapter-card" data-ch="4">
+      <div class="ch-num">Bài 13</div>
+      <div class="ch-name">Thành tựu Văn minh Đại Việt</div>
+      <div class="ch-count">20 câu</div>
+    </div>
+  </div>
+
+  <button class="btn-start" id="btn-start">🎯 Bắt đầu làm bài</button>
+</div>
+
+<!-- ──────── QUIZ SCREEN ──────── -->
+<div class="screen" id="quiz-screen">
+  <div class="quiz-header">
+    <div class="chapter-badge" id="cur-chapter-badge">Bài 10</div>
+    <div class="q-counter">Câu <span id="q-cur">1</span> / <span id="q-total">67</span></div>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progress-bar"></div>
+  </div>
+  <div class="segment-progress" id="seg-progress"></div>
+
+  <div class="question-card" id="question-card">
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options"></div>
+  </div>
+
+  <div class="feedback-box" id="feedback-box"></div>
+  <button class="btn-next" id="btn-next">Câu tiếp theo →</button>
+</div>
+
+<!-- ──────── RESULT SCREEN ──────── -->
+<div class="screen" id="result-screen">
+  <div class="result-ring-wrap">
+    <div class="result-ring">
+      <svg viewBox="0 0 160 160">
+        <circle class="ring-bg" cx="80" cy="80" r="65"/>
+        <circle class="ring-fill" id="ring-fill" cx="80" cy="80" r="65"/>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-pct" id="ring-pct">0%</div>
+        <div class="ring-lbl">Điểm số</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-title" id="result-title">Xuất sắc!</div>
+  <div class="result-sub" id="result-sub"></div>
+
+  <div class="result-stats">
+    <div class="res-stat green"><div class="rs-num" id="rs-correct">0</div><div class="rs-lbl">Đúng</div></div>
+    <div class="res-stat red"><div class="rs-num" id="rs-wrong">0</div><div class="rs-lbl">Sai</div></div>
+    <div class="res-stat gold"><div class="rs-num" id="rs-total">0</div><div class="rs-lbl">Tổng câu</div></div>
+  </div>
+
+  <div class="result-btns">
+    <button class="btn-restart" id="btn-restart">🔄 Làm lại</button>
+    <button class="btn-back" id="btn-back">← Chọn chương khác</button>
+  </div>
+
+  <div class="review-section" id="review-section">
+    <div class="review-title">📋 Các câu trả lời sai</div>
+    <div id="review-list"></div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const ALL_QUESTIONS = [
+  // BÀI 10 (17 câu)
+  {ch:1, text:"Nhà nước đầu tiên được hình thành trên lãnh thổ Việt Nam có tên gọi là", options:["Văn Lang","Lâm Ấp","Chăm pa","Phù Nam"], correct:0},
+  {ch:1, text:"Kinh đô của nhà nước Văn Lang đặt tại", options:["Cổ Loa (Hà Nội)","Phong Châu (Phú Thọ)","Phú Xuân (Huế)","Quy Nhơn (Bình Định)"], correct:1},
+  {ch:1, text:"Nền văn minh Văn Lang – Âu Lạc còn được gọi là văn minh", options:["Sông Hồng","Phù Nam","Sa Huỳnh","Trống đồng"], correct:3},
+  {ch:1, text:"Kinh tế chính của cư dân Văn Lang – Âu Lạc là", options:["săn bắn, hái lượm","nông nghiệp lúa nước","thương nghiệp","thủ công nghiệp"], correct:1},
+  {ch:1, text:"Nhà nước nào sau đây là sự kế thừa và phát triển của nhà nước Văn Lang?", options:["Âu Lạc","Lâm Ấp","Chămpa","Phù Nam"], correct:0},
+  {ch:1, text:"Bộ máy nhà nước Văn Lang - Âu Lạc được tổ chức theo 3 cấp từ trên xuống, đứng đầu lần lượt là", options:["Vua –Quan văn, quan võ – Lạc dân","Vua – Lạc hầu, Lạc tướng – Tù trưởng","Vua – Quý tộc, vương hầu – Bồ chính","Vua – Lạc hầu, Lạc tướng – Bồ chính"], correct:3},
+  {ch:1, text:"Nhà ở của cư dân Văn Lang – Âu Lạc xây dựng bằng chất liệu nào sau đây?", options:["Đất nung","Gạch nung","Đá xanh","Gỗ, tre, nứa"], correct:3},
+  {ch:1, text:"Tục thờ thần Mặt Trời là biểu hiện của tín ngưỡng nào sau đây của cư dân Văn Lang – Âu Lạc?", options:["Thờ cúng tổ tiên","Tín ngưỡng phồn thực","Sùng bái tự nhiên","Thờ thần động vật"], correct:2},
+  {ch:1, text:"Hiện vật nào sau đây tiêu biểu cho trình độ chế tác kim loại của cư dân Văn Lang – Âu Lạc?", options:["Trống đồng Đông Sơn","Tiền đồng Óc Eo","Phù điêu Khương Mỹ","Tượng phật Đồng Dương"], correct:0},
+  {ch:1, text:"Thành Cổ Loa là công trình quân sự tiêu biểu của nền văn minh", options:["Âu Lạc","Văn Lang","Đại Việt","Trung Hoa"], correct:0},
+  {ch:1, text:"Thành tựu nào sau đây của cư dân Văn Lang – Âu Lạc thể hiện sự phát triển về trình độ quân sự?", options:["Chế tạo ra vũ khí bằng đá có độ sát thương cao","Chế tạo và sử dụng nỏ bắn nhiều mũi tên một lần","Huấn luyện và sử dụng voi chiến trong chiến đấu","Xây dựng nhiều thành trì bằng bê tông và cốt thép"], correct:1},
+  {ch:1, text:"Nội dung nào sau đây là cơ sở kinh tế dẫn đến sự hình thành nền văn minh Văn Lang - Âu Lạc?", options:["Hoạt động thương nghiệp đường biển đặc biệt phát triển","Bắt đầu xuất hiện sự phân hóa giữa các tầng lớp xã hội","Nhu cầu chống giặc ngoại xâm ngày càng trở nên bức thiết","Nông nghiệp trồng lúa nước đạt trình độ phát triển cao"], correct:3},
+  {ch:1, text:"Nội dung nào sau đây là cơ sở xã hội dẫn đến sự hình thành nền văn minh Văn Lang - Âu Lạc?", options:["Xuất hiện sự phân hóa giữa các tầng lớp trong xã hội","Nhu cầu xâm lược, mở rộng lãnh thổ trở nên bức thiết","Hoạt động thủ công nghiệp đạt trình độ phát triển cao","Công cụ lao động bằng kim khí được sử dụng phổ biến"], correct:0},
+  {ch:1, text:"Nội dung nào sau đây không phản ánh đúng cơ sở dẫn đến sự ra đời của nhà nước Văn Lang - Âu Lạc?", options:["Chế độ công xã nguyên thủy đạt đến giai đoạn cực thịnh","Yêu cầu của hoạt động trị thuỷ để phục vụ nông nghiệp","Yêu cầu của công cuộc đấu tranh chống giặc ngoại xâm","Những chuyển biến cơ bản trong đời sống kinh tế - xã hội"], correct:0},
+  {ch:1, text:"Nhận xét nào dưới đây là không đúng về vai trò của nền văn minh Văn Lang - Âu Lạc đối với tiến trình phát triển của lịch sử Việt Nam?", options:["Là nền văn minh đầu tiên của lịch sử dân tộc Việt Nam","Góp phần định hình bản sắc văn hóa dân tộc Việt Nam","Đưa Việt Nam trở thành quốc gia giàu mạnh nhất khu vực","Đặt nền tảng cho sự phát triển của các nền văn minh sau này"], correct:2},
+  {ch:1, text:"Nhận xét nào sau đây là đúng về hoạt động kinh tế của cư dân Văn Lang – Âu Lạc?", options:["Hoạt động kinh tế đa dạng với nông nghiệp đóng vai trò chủ đạo","Nền kinh tế hàng hóa phát triển với trình độ tập trung sản xuất cao","Thủ công nghiệp và thương nghiệp đường biển đóng vai trò chủ đạo","Hoạt động kinh tế đa dạng phục vụ chủ yếu cho xuất khẩu ra bên ngoài"], correct:0},
+  {ch:1, text:"Một trong những biểu hiện chứng tỏ bước phát triển của nước Âu Lạc so với quốc gia Văn Lang là", options:["bộ máy nhà nước được tổ chức hoàn thiện hơn so với thời kì trước","lãnh thổ được mở rộng hơn trên cơ sở thống nhất Âu Việt và Lạc Việt","cải cách đơn vị hành chính theo hướng tập trung, thống nhất, quan liêu","bảo vệ vững chắc độc lập dân tộc trước sự xâm lược của quân Nam Hán"], correct:1},
+
+  // BÀI 11 (17 câu)
+  {ch:2, text:"Nhà nước cổ đại nào sau đây ở Việt Nam ra đời vào khoảng thế kỉ II?", options:["Văn Lang","Âu Lạc","Phù Nam","Chăm – pa"], correct:3},
+  {ch:2, text:"Văn minh Chăm – pa được hình thành trên cơ sở của nền văn hóa nào sau đây?", options:["Sa Huỳnh","Óc Eo","Đông Sơn","Phùng Nguyên"], correct:0},
+  {ch:2, text:"Dưới thời kì nhà nước Chăm – pa, ở cấp địa phương, cả nước được chia thành các", options:["châu, huyện, làng","tỉnh, huyện, xã","tỉnh, huyện, làng","phủ, huyện, tổng"], correct:2},
+  {ch:2, text:"Hoạt động kinh tế chủ yếu của cư dân Chăm-pa là", options:["nông nghiệp, thủ công nghiệp","công nghiệp chế tạo, đóng tàu","chế biến rượu nho và dầu ô liu","buôn bán bằng đường biển"], correct:0},
+  {ch:2, text:"Cư dân Chăm – pa đã tiếp thu tôn giáo nào sau đây từ đất nước Ấn Độ?", options:["Hin – đu giáo","Đạo giáo","Nho giáo","Thiên chúa giáo"], correct:0},
+  {ch:2, text:"Cư dân Chăm – pa đã sáng tạo ra chữ Chăm cổ trên cơ sở tiếp thu chữ viết nào sau đây?", options:["Chữ Phạn","Chữ Hán","Chữ La-tinh","Chữ Nôm"], correct:0},
+  {ch:2, text:"Di sản nào sau đây của văn minh Chăm-pa được lưu giữ đến ngày nay?", options:["Khu đô thị cổ Hội An","Kiến trúc tháp Chăm","Hoàng thành Thăng Long","Kinh thành Huế"], correct:1},
+  {ch:2, text:"Văn minh Phù Nam được hình thành trên cơ sở của nền văn hóa nào sau đây?", options:["Sa Huỳnh","Óc Eo","Đông Sơn","Đồng Đậu"], correct:1},
+  {ch:2, text:"Nhà nước Chăm – pa và nhà nước Phù Nam đều được tổ chức theo mô hình của thể chế", options:["dân chủ cộng hòa","dân chủ chủ nô","quân chủ chuyên chế","quân chủ lập hiến"], correct:2},
+  {ch:2, text:"Ngành kinh tế nào sau đây phát triển mạnh dưới thời kì nhà nước Phù Nam?", options:["Chế tạo máy","Làm đồng hồ","Thương nghiệp biển","Chế tạo vũ khí"], correct:2},
+  {ch:2, text:"Thương cảng nào sau đây đã trở thành trung tâm buôn bán sầm uất của vương quốc Phù Nam?", options:["Óc Eo","Vân Đồn","Hải Phòng","Đà Nẵng"], correct:0},
+  {ch:2, text:"Nội dung nào sau đây không phải là cơ sở hình thành của văn minh Chăm-pa?", options:["Chịu ảnh hưởng từ nền văn minh Ấn Độ","Hình thành trên cơ sở của văn hóa Sa Huỳnh","Lưu giữ và phát huy nền văn hóa bản địa","Chịu ảnh hưởng của nền văn hóa Trung Hoa"], correct:3},
+  {ch:2, text:"Nội dung nào sau đây là điểm khác biệt về cơ sở hình thành của nền văn minh Chăm – pa so với nền văn minh Văn Lang – Âu Lạc?", options:["Kinh tế nông nghiệp, thủ công nghiệp phát triển","Xã hội có sự phân hóa thành các giai cấp, tầng lớp","Chịu ảnh hưởng sâu sắc của văn minh Trung Hoa","Chịu ảnh hưởng sâu sắc của nền văn minh Ấn Độ"], correct:3},
+  {ch:2, text:'"Thuyền đi phổ biến là loại hai đầu nhọn, có cánh buồm..." là phương tiện đi lại phổ biến trên biển của cư dân', options:["Văn Lang","Chăm-pa","Âu Lạc","Phù Nam"], correct:1},
+  {ch:2, text:'"Sống trong các xóm làng (phum, sóc), gồm nhiều gia đình có cùng huyết thống ở một địa bàn" là đặc điểm nổi bật của cư dân nền văn minh nào sau đây?', options:["Văn Lang","Chăm-pa","Âu Lạc","Phù Nam"], correct:3},
+  {ch:2, text:"Nội dung nào sau đây không phản ánh đúng cơ sở dẫn đến sự ra đời của văn minh Phù Nam?", options:["Sự tiếp thu có chọn lọc thành tựu của văn minh Ấn Độ","Xuất hiện sự phân hóa giữa người giàu và người nghèo","Sự đoàn kết, cộng cư của các cộng đồng cư dân Việt cổ","Những chuyển biến cơ bản trong đời sống kinh tế - xã hội"], correct:2},
+  {ch:2, text:"Nhận xét nào sau là đúng về vai trò của nền văn minh Chăm-pa đối với tiến trình phát triển của lịch sử Việt Nam?", options:["Là một bộ phận hình thành bản sắc văn hóa Việt Nam","Tạo nên sự tách biệt trong lịch sử văn hóa dân tộc","Cung cấp nguồn sử liệu quý giá cho lịch sử thế giới","Là cội nguồn của nền văn minh tiếp theo của dân tộc"], correct:0},
+
+  // BÀI 12 (16 câu)
+  {ch:3, text:"Trong thế kỉ X, văn minh Đại Việt", options:["bước đầu được định hình","phát triển mạnh mẽ và toàn diện","có sự giao lưu với văn minh phương Tây","có những dấu hiệu trì trệ và lạc hậu"], correct:0},
+  {ch:3, text:"Từ thế kỉ XI - XV, văn minh Đại Việt", options:["bước đầu được định hình","phát triển mạnh mẽ và toàn diện","có sự giao lưu với văn minh phương Tây","có những dấu hiệu trì trệ và lạc hậu"], correct:1},
+  {ch:3, text:"Trong các thế kỉ XVI - XVII, văn minh Đại Việt", options:["bước đầu được định hình","phát triển mạnh mẽ và toàn diện","có sự giao lưu với văn minh phương Tây","có những dấu hiệu trì trệ và lạc hậu"], correct:2},
+  {ch:3, text:"Văn minh Đại Việt bộc lộ những dấu hiệu của sự trì trệ và lạc hậu vào thời kì nào sau đây?", options:["Thế kỉ X","Thế kỉ XI - XV","Thế kỉ XVI - XVII","Thế kỉ XVIII - XIX"], correct:3},
+  {ch:3, text:"Thời kì phát triển của nền văn minh Đại Việt chấm dứt khi", options:["vua Bảo Đại thoái vị (1945), chế độ quân chủ ở Việt Nam sụp đổ","thực dân Pháp xâm lược và thiết lập chế độ cai trị ở Việt Nam","nhà Minh xâm lược và thiết lập ách cai trị, đô hộ ở Đại Ngu","nhà nước Việt Nam Dân chủ Cộng hòa ra đời (2/9/1945)"], correct:1},
+  {ch:3, text:"Triều đại phong kiến nào sau đây gắn liền với quá trình định hình của văn minh Đại Việt trong thế kỉ X?", options:["Đinh","Lý","Trần","Nguyễn"], correct:0},
+  {ch:3, text:"Năm 1010, Lý Công Uẩn quyết định dời đô từ Hoa Lư về", options:["Cổ Loa","Tây Đô","Đại La","Phong Châu"], correct:2},
+  {ch:3, text:"Công trình kiến trúc nào dưới đây được coi là minh chứng cho sự phát triển rực rỡ của văn minh Đại Việt trên các lĩnh vực chính trị, kinh tế, văn hóa, giáo dục?", options:["Hoàng thành Thăng Long (Hà Nội)","Thánh địa Mỹ Sơn (Quảng Nam)","Thành Cổ Loa (Hà Nội)","Thành nhà Hồ (Thanh Hóa)"], correct:0},
+  {ch:3, text:"Từ đầu thế kỉ XVIII đến giữa thế kỉ XIX, văn minh Đại Việt", options:["bước đầu được định hình","phát triển mạnh mẽ và toàn diện","có sự giao lưu với văn minh phương Tây","bộc lộ những dấu hiệu trì trệ và lạc hậu"], correct:3},
+  {ch:3, text:"Từ thế kỉ XI – XV, văn minh Đại Việt phát triển mạnh mẽ và toàn diện gắn liền với các vương triều nào sau đây?", options:["Lý, Trần, Hồ, Lê sơ","Khúc, Ngô, Đinh, Tiền Lê","Lý, Trần, Lê sơ, Mạc","Lê sơ, Tây Sơn, Nguyễn"], correct:0},
+  {ch:3, text:"Một trong những cơ sở hình thành nền văn minh Đại Việt là", options:["tiếp thu hoàn toàn những thành tựu văn minh Hy Lạp","kế thừa những nền văn minh cổ trên đất nước Việt Nam","quá trình áp đặt về văn hóa lên các quốc gia láng giềng","quá trình xâm lược và bành trướng lãnh thổ ra bên ngoài"], correct:1},
+  {ch:3, text:"Nội dung nào sau đây là cơ sở quan trọng nhất dẫn đến sự hình thành và phát triển rực rỡ của văn minh Đại Việt?", options:["Kế thừa các nền văn minh cổ đại","Nền độc lập, tự chủ của đất nước","Tiếp thu thành tựu văn minh Ấn Độ","Tiếp thu thành tựu văn minh Trung Hoa"], correct:1},
+  {ch:3, text:"Nội dung nào sau đây không phải là cơ sở hình thành nền văn minh Đại Việt?", options:["Có cội nguồn từ các nền văn minh cổ xưa trên đất nước Việt Nam","Tiếp thu chọn lọc từ thành tựu của các nền văn minh bên ngoài","Nho giáo là tư tưởng chính thống trong suốt các triều đại phong kiến","Trải qua quá trình đấu tranh, củng cố độc lập dân tộc của quân và dân ta"], correct:2},
+  {ch:3, text:"Nội dung nào dưới đây không phản ánh đúng cơ sở hình thành và phát triển của nền văn minh Đại Việt?", options:["Kế thừa nền văn minh Văn Lang - Âu Lạc","Nền độc lập, tự chủ của quốc gia Đại Việt","Quá trình xâm lược và mở rộng lãnh thổ","Tiếp thu các thành tựu văn minh bên ngoài"], correct:2},
+  {ch:3, text:"Người Việt đã tiếp thu có chọn lọc các thành tựu về thể chế chính trị, luật pháp từ nền văn minh nào sau đây?", options:["Văn minh Ấn Độ","văn minh Trung Hoa","Văn minh Ai Cập","Văn minh La Mã"], correct:1},
+  {ch:3, text:"Trong quá trình tồn tại và phát triển, văn minh Đại Việt đã tiếp thu có chọn lọc thành tựu của văn minh Ấn Độ về", options:["luật pháp","thiết chế chính trị","chữ viết","kiến trúc"], correct:3},
+
+  // BÀI 13 (20 câu)
+  {ch:4, text:"Các nhà nước phong kiến Việt Nam được xây dựng theo thể chế", options:["Quân chủ lập hiến","Chiếm hữu nô lệ","Dân chủ chủ nô","Quân chủ chuyên chế"], correct:3},
+  {ch:4, text:"Bộ máy nhà nước chuyên chế trung ương tập quyền của Đại Việt được hoàn chỉnh dưới triều đại nào sau đây?", options:["Thời Lý","Thời Trần","Thời Lê sơ","Thời Hồ"], correct:2},
+  {ch:4, text:"Bộ luật thành văn đầu tiên của Đại Việt là", options:["Hình thư","Hình luật","Luật Hồng Đức","Luật Gia Long"], correct:0},
+  {ch:4, text:"Dưới triều đại nhà Lê (thế kỉ XV), bộ luật thành văn nào sau đây được ban hành?", options:["Hình luật","Hình thư","Quốc triều hình luật","Hoàng Việt luật lệ"], correct:2},
+  {ch:4, text:"Để phát triển sản xuất nông nghiệp, nhà nước phong kiến Đại Việt đã ban hành chính sách nào sau đây?", options:["Bế quan tỏa cảng","Ngụ binh ư nông","Độc tôn Nho giáo","Dựng bia tiến sĩ"], correct:1},
+  {ch:4, text:"Các xưởng thủ công của nhà nước dưới các triều đại phong kiến Việt Nam còn được gọi là", options:["Cục bách tác","Quốc sử quán","Quốc tử giám","Hàn lâm viện"], correct:0},
+  {ch:4, text:"Trung tâm chính trị - văn hóa và đô thị lớn nhất Đại Việt trong các thế kỷ X-XV là", options:["Phố Hiến","Thanh Hà","Thăng Long","Hội An"], correct:2},
+  {ch:4, text:"Năm 1149, để đẩy mạnh phát triển ngoại thương nhà Lý đã có chủ trương nào sau đây?", options:["Phát triển Thăng Long với 36 phố phường","Xây dựng cảng Vân Đồn (Quảng Ninh)","Cho phát triển các chợ làng, chợ huyện","Xây dựng một số địa điểm trao đổi hàng hóa ở biên giới"], correct:1},
+  {ch:4, text:"Chữ Nôm trở thành chữ viết chính thống của dân tộc Việt Nam dưới triều đại phong kiến nào sau đây?", options:["Nhà Lý","Nhà Trần","Lê sơ","Tây Sơn"], correct:3},
+  {ch:4, text:"Việc cho dựng bia ghi danh tiến sĩ ở Văn Miếu - Quốc Tử giám thể hiện chính sách nào sau đây của các triều đại phong kiến Việt Nam?", options:["Nhà nước coi trọng giáo dục, khoa cử","Ghi danh những anh hùng có công với nước","Ghi lại tiến trình phát triển của lịch sử dân tộc","Đề cao vai trò của sản xuất nông nghiệp"], correct:0},
+  {ch:4, text:"Ngô Sĩ Liên và các sử thần triều Hậu Lê đã biên soạn bộ sử nào dưới đây?", options:["Đại Việt sử kí","Đại Việt sử kí toàn thư","Lam Sơn thực lục","Đại Việt thông sử"], correct:1},
+  {ch:4, text:"Luật pháp của các triều đại phong kiến Đại Việt không đề cao", options:["tính dân tộc và chủ quyền quốc gia","tính tự trị của các đơn vị làng, xã","quyền lực của vua và giai cấp thống trị","quyền lợi chân chính của nhân dân"], correct:1},
+  {ch:4, text:"Nội dung nào sau đây phản ánh điểm tiến bộ của luật pháp Việt Nam thời phong kiến?", options:["Bảo vệ sức kéo trong nông nghiệp","Bảo vệ quyền lực tuyệt đối của nhà vua","Khuyến khích phát triển ngoại thương","Hạn chế sự phát triển của tôn giáo du nhập"], correct:0},
+  {ch:4, text:"Nội dung nào sau đây không phản ánh đúng về tổ chức bộ máy nhà nước của Đại Việt thời kì phong kiến?", options:["Tổ chức theo thể chế quân chủ lập hiến","Không ngừng được củng cố, hoàn thiện","Vai trò quản lí của nhà nước ngày càng chặt chẽ","Tổ chức theo thể chế quân chủ chuyên chế"], correct:0},
+  {ch:4, text:"Dưới triều Lê sơ (thế kỉ XV), nhà nước cho dựng bia ghi danh tiến sĩ không mang ý nghĩa nào sau đây?", options:["Khuyến khích nhân tài","Vinh danh hiền tài","Đề cao vai trò của nhà vua","Răn đe hiền tài"], correct:2},
+  {ch:4, text:"Nội dung nào sau đây không phải là biện pháp của các triều đại phong kiến Việt Nam nhằm phát triển giáo dục, khoa cử đất nước?", options:["Mở rộng quy mô của Quốc Tử Giám","Quy định chặt chẽ các thể lệ thi cử","Tổ chức xướng danh và vinh quy bái tổ","Thành lập quan xưởng tại kinh thành"], correct:3},
+  {ch:4, text:"Trong tiến trình phát triển của lịch sử của dân tộc Việt Nam, nền văn minh Đại Việt không mang ý nghĩa nào sau đây?", options:["Thể hiện tinh thần quật khởi và sức lao động sáng tạo của nhân dân","Chứng minh sự phát triển của dân tộc Việt Nam trên nhiều lĩnh vực","Góp phần tạo nên sức mạnh dân tộc chống ngoại xâm, bảo vệ độc lập","Là nền tảng để Việt Nam sánh ngang với các cường quốc trên thế giới"], correct:3},
+  {ch:4, text:"Nhận xét nào sau đây là đúng khi nói về đặc điểm của nền văn minh Đại Việt?", options:["Văn minh Đại Việt phát triển đa dạng, phong phú, mang đậm tính dân tộc","Văn minh Đại Việt phát triển đa dạng, lâu đời và có tính dân chủ","Là sự kết hợp hoàn toàn giữa văn minh Trung Hoa và văn minh Ấn Độ","Thiết chế chính trị của các triều đại phong kiến đều mang tính dân chủ"], correct:0},
+  {ch:4, text:"Nhận xét nào sau đây là đúng khi nói về đặc điểm của nền văn minh Đại Việt (lần 2)?", options:["Không có nguồn gốc bản địa mà du nhập từ bên ngoài vào","Là nền văn minh nông nghiệp lúa nước gắn với văn hóa làng xã","Là nền văn minh phát triển rực rỡ nhất khu vực Đông Nam Á","Trong kỷ nguyên Đại Việt, mọi lĩnh vực kinh tế đều phát triển"], correct:1},
+  {ch:4, text:"Nội dung nào dưới đây không phản ánh đúng ý nghĩa của văn minh Đại Việt?", options:["Thể hiện sức sáng tạo, sự lao động bền bỉ của các thế hệ người Việt","Tạo nên sức mạnh dân tộc trong các cuộc đấu tranh bảo vệ Tổ quốc","Góp phần bảo tồn, giữ gìn và phát huy thành tựu của văn minh Việt cổ","Có sức lan tỏa và ảnh hưởng lớn đến sự phát triển của văn minh Trung Hoa"], correct:3},
+];
+
+const CH_NAMES = {
+  0:"Toàn bộ",
+  1:"Bài 10 – Văn Lang – Âu Lạc",
+  2:"Bài 11 – Chăm-pa, Phù Nam",
+  3:"Bài 12 – Cơ sở VH Đại Việt",
+  4:"Bài 13 – Thành tựu Đại Việt"
+};
+
+// ── STATE ──
+let questions = [], qIdx = 0, answers = [], selectedCh = 0;
+const LABELS = ['A','B','C','D'];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function prepareQuestions(ch) {
+  let pool = ch === 0 ? ALL_QUESTIONS : ALL_QUESTIONS.filter(q => q.ch === ch);
+  // Shuffle answers per question
+  return shuffle(pool).map(q => {
+    const correctText = q.options[q.correct];
+    const shuffledOpts = shuffle(q.options);
+    return {
+      ch: q.ch,
+      text: q.text,
+      options: shuffledOpts,
+      correct: shuffledOpts.indexOf(correctText)
+    };
+  });
+}
+
+// ── NAVIGATION ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── START SCREEN ──
+document.querySelectorAll('.chapter-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.chapter-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedCh = parseInt(card.dataset.ch);
+  });
+});
+
+document.getElementById('btn-start').addEventListener('click', startQuiz);
+document.getElementById('btn-restart').addEventListener('click', startQuiz);
+document.getElementById('btn-back').addEventListener('click', () => showScreen('start-screen'));
+
+function startQuiz() {
+  questions = prepareQuestions(selectedCh);
+  qIdx = 0;
+  answers = new Array(questions.length).fill(null);
+  buildSegDots();
+  showScreen('quiz-screen');
+  renderQuestion();
+}
+
+// ── SEGMENT DOTS ──
+function buildSegDots() {
+  const seg = document.getElementById('seg-progress');
+  seg.innerHTML = '';
+  questions.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'seg-dot';
+    d.id = `dot-${i}`;
+    seg.appendChild(d);
+  });
+}
+
+function updateDot(i, state) {
+  const d = document.getElementById(`dot-${i}`);
+  if (d) { d.className = 'seg-dot ' + state; }
+}
+
+// ── RENDER ──
+function renderQuestion() {
+  const q = questions[qIdx];
+  document.getElementById('q-cur').textContent = qIdx + 1;
+  document.getElementById('q-total').textContent = questions.length;
+  document.getElementById('cur-chapter-badge').textContent = CH_NAMES[q.ch] || `Bài ${q.ch}`;
+  document.getElementById('progress-bar').style.width = `${((qIdx) / questions.length) * 100}%`;
+
+  // dots
+  if (qIdx > 0 && answers[qIdx-1] !== null) {
+    updateDot(qIdx-1, answers[qIdx-1] === questions[qIdx-1].correct ? 'correct' : 'wrong');
+  }
+  updateDot(qIdx, 'current');
+
+  document.getElementById('q-text').textContent = q.text;
+  const opts = document.getElementById('options');
+  opts.innerHTML = '';
+
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-label">${LABELS[i]}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => selectAnswer(i));
+    opts.appendChild(btn);
+  });
+
+  document.getElementById('feedback-box').className = 'feedback-box';
+  document.getElementById('feedback-box').innerHTML = '';
+  document.getElementById('btn-next').classList.remove('show');
+  document.getElementById('question-card').style.animation = 'none';
+  void document.getElementById('question-card').offsetWidth;
+  document.getElementById('question-card').style.animation = '';
+}
+
+function selectAnswer(idx) {
+  if (answers[qIdx] !== null) return;
+  answers[qIdx] = idx;
+  const q = questions[qIdx];
+  const btns = document.querySelectorAll('.option-btn');
+
+  btns.forEach((btn, i) => {
+    if (i === q.correct) btn.classList.add('correct');
+    else if (i === idx && idx !== q.correct) btn.classList.add('wrong');
+    else btn.classList.add('disabled-plain');
+    btn.disabled = true;
+  });
+
+  const fb = document.getElementById('feedback-box');
+  if (idx === q.correct) {
+    fb.className = 'feedback-box show correct-fb';
+    fb.innerHTML = '✅ Chính xác! Bạn đã trả lời đúng.';
+  } else {
+    fb.className = 'feedback-box show wrong-fb';
+    fb.innerHTML = `❌ Sai rồi. Đáp án đúng là <strong>${LABELS[q.correct]}. ${q.options[q.correct]}</strong>`;
+  }
+
+  const btnNext = document.getElementById('btn-next');
+  btnNext.classList.add('show');
+  btnNext.textContent = qIdx === questions.length - 1 ? '🏁 Xem kết quả' : 'Câu tiếp theo →';
+}
+
+document.getElementById('btn-next').addEventListener('click', () => {
+  if (qIdx < questions.length - 1) {
+    qIdx++;
+    renderQuestion();
+  } else {
+    showResults();
+  }
+});
+
+// ── RESULTS ──
+function showResults() {
+  const correct = answers.filter((a,i) => a === questions[i].correct).length;
+  const total = questions.length;
+  const pct = Math.round((correct/total)*100);
+
+  // ring
+  const circumference = 2 * Math.PI * 65;
+  const fill = document.getElementById('ring-fill');
+  fill.style.strokeDasharray = circumference;
+  fill.style.strokeDashoffset = circumference;
+  if (pct >= 80) fill.style.stroke = '#3fb950';
+  else if (pct >= 60) fill.style.stroke = '#e6ac2c';
+  else fill.style.stroke = '#f85149';
+
+  document.getElementById('ring-pct').textContent = pct + '%';
+  document.getElementById('rs-correct').textContent = correct;
+  document.getElementById('rs-wrong').textContent = total - correct;
+  document.getElementById('rs-total').textContent = total;
+
+  let title, sub;
+  if (pct >= 90) { title = '🏆 Xuất sắc!'; sub = 'Bạn đã nắm rất vững kiến thức. Tuyệt vời!'; }
+  else if (pct >= 80) { title = '🌟 Giỏi lắm!'; sub = 'Kết quả rất tốt, tiếp tục phát huy nhé!'; }
+  else if (pct >= 60) { title = '👍 Khá tốt!'; sub = 'Bạn đã vượt qua ngưỡng đạt yêu cầu. Cố gắng hơn nữa!'; }
+  else { title = '📚 Cần cố gắng thêm!'; sub = 'Hãy ôn lại phần kiến thức và thử lại nhé!'; }
+
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-sub').textContent = sub;
+
+  // Review wrong answers
+  const reviewList = document.getElementById('review-list');
+  reviewList.innerHTML = '';
+  const wrongOnes = questions.map((q,i) => ({q, ans:answers[i], i})).filter(({q,ans}) => ans !== q.correct);
+  if (wrongOnes.length === 0) {
+    reviewList.innerHTML = '<p style="color:var(--green);font-weight:600;">🎉 Bạn không có câu nào sai!</p>';
+  } else {
+    wrongOnes.forEach(({q,ans,i}) => {
+      const div = document.createElement('div');
+      div.className = 'review-item';
+      div.innerHTML = `
+        <div class="ri-q">Câu ${i+1}: ${q.text}</div>
+        <div class="ri-row ri-wrong-ans">❌ Bạn chọn: ${LABELS[ans]}. ${q.options[ans]}</div>
+        <div class="ri-row ri-right-ans">✅ Đáp án đúng: ${LABELS[q.correct]}. ${q.options[q.correct]}</div>
+      `;
+      reviewList.appendChild(div);
+    });
+  }
+
+  showScreen('result-screen');
+
+  // Animate ring
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      fill.style.strokeDashoffset = circumference - (pct/100)*circumference;
+    }, 100);
+  });
+}
+</script>
+</body>
+</html>
